@@ -85,11 +85,12 @@ public enum CommandsEnum {
     }
 
     public static String findExecutableLocationInPath(String executable) throws IOException {
+        String output = null;
         for(String path : Constants.ENV_PATH_LIST) {
             if(getFiles(path).contains(executable)) {
-                return path;
+                output = path;
             }
         }
-        return null;
+        return output;
     }
 }

@@ -14,9 +14,6 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         Scanner scanner = new Scanner(System.in);
-        for(String path : Constants.ENV_PATH_LIST){
-            System.out.println(path);
-        }
 
         while(true) {
             System.out.print("$ ");
