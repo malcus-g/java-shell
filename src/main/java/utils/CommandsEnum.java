@@ -2,8 +2,10 @@ package utils;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,7 +35,7 @@ public enum CommandsEnum {
         return null;
     }
 
-    public static boolean isValid(String input) {
+    public static boolean isValidCommand(String input) {
         return fromString(input) != null;
     }
 
@@ -56,7 +58,7 @@ public enum CommandsEnum {
         }
 
         String query = line[1];
-        if(isValid(query)) {
+        if(isValidCommand(query)) {
             System.out.println(query + Constants.BUILTIN_SUFFIX);
             return;
         }
@@ -64,31 +66,46 @@ public enum CommandsEnum {
         try {
             String dir = findExecutableLocationInPath(query);
             if(!(dir == null)) {
-                System.out.println(query + " is " + dir);
+                System.out.println(query + " is " + dir + "/" + query);
             }else {
                 System.out.println(query + Constants.NOT_FOUND);
             }
-
-        }catch (IOException e) {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
 
-    public static Set<String> getFiles(String dir) throws IOException {
-        try (Stream<Path> stream = Files.list(Paths.get(dir))) {
-            return stream
+    public static Set<String> getFiles(String dir) throws Exception {
+        Set<String> files = new HashSet<>();
+        try (Stream<Path> stream = Files.list(Path.of(dir))) {
+            files = stream
                     .filter(file -> !Files.isDirectory(file))
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .collect(Collectors.toSet());
+        }catch(Exception e){
+            throw new Exception(e);
         }
+        return files;
     }
 
-    public static String findExecutableLocationInPath(String executable) throws IOException {
+    public static String findExecutableLocationInPath(String executable) {
         String output = null;
         for(String path : Constants.ENV_PATH_LIST) {
-            if(getFiles(path).contains(executable)) {
-                output = path;
+            Set<String> files = null;
+            try {
+                files = getFiles(path);
+            } catch (Exception e) {
+                continue;
+            }
+            for(String file : files){
+                if(file.equals(executable)){
+                    output = path;
+                    break;
+                }
+            }
+            if(output != null){
+                break;
             }
         }
         return output;
