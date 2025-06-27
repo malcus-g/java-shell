@@ -29,7 +29,7 @@ public class Main {
                     break;
                 case "type":
                     if(commandList.contains(line[1])){
-                        System.out.println(command + " is a shell builtin");
+                        System.out.println(line[1] + " is a shell builtin");
                     }else{
                         System.out.println(line[1] + ": not found");
                     }
