@@ -1,9 +1,9 @@
 package utils;
 
+import java.io.File;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 public class Constants {
     // Responses
@@ -14,5 +14,5 @@ public class Constants {
 
     // Environment
     public static final String ENV_PATH = System.getenv("PATH");
-    public static final List<String> ENV_PATH_LIST = Arrays.asList(ENV_PATH.split(":"));
+    public static final List<String> ENV_PATH_LIST = Arrays.asList(ENV_PATH.split(File.pathSeparator));
 }
