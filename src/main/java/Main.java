@@ -15,7 +15,7 @@ public class Main {
                 case "exit":
                     return;
                 case "echo":
-                    StringBuilder text = new StringBuilder(" ");
+                    StringBuilder text = new StringBuilder();
                     for (int i = 1; i < line.length; i++) {
                         text.append(line[i]).append(" ");
                     }
