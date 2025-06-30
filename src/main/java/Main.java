@@ -39,6 +39,8 @@ public class Main {
                 case TYPE:
                     CommandsEnum.handleType(fullCommand);
                     break;
+                case PWD:
+                    CommandsEnum.handlePWD();
             }
         }
     }

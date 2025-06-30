@@ -16,7 +16,8 @@ import java.util.stream.Stream;
 public enum CommandsEnum {
     EXIT("exit"),
     ECHO("echo"),
-    TYPE("type");
+    TYPE("type"),
+    PWD("pwd");
 
     private final String value;
 
@@ -78,6 +79,10 @@ public enum CommandsEnum {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    public static void handlePWD() {
+        System.out.println(System.getProperty("user.dir"));
     }
 
     public static Set<String> getFiles(String dir) throws IOException {
