@@ -1,9 +1,7 @@
-import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Scanner;
 
-import utils.CommandsEnum;
+import utils.Commands;
 import utils.Constants;
 
 public class Main {
@@ -18,12 +16,12 @@ public class Main {
 
             String[] fullCommand = input.split(" ");
             String commandName = fullCommand[0];
-            CommandsEnum command = CommandsEnum.fromString(commandName);
+            Commands command = Commands.fromString(commandName);
 
             if(command == null) {
-                String path = CommandsEnum.findExecutableLocationInPath(commandName);
+                String path = Commands.findExecutableLocationInPath(commandName);
                 if(!(path == null)) {
-                    CommandsEnum.executeCommand(fullCommand, Paths.get("/").toAbsolutePath().toString());
+                    Commands.executeCommand(fullCommand, Paths.get("/").toAbsolutePath().toString());
                 } else {
                     System.out.println(commandName + Constants.COMMAND_NOT_FOUND);
                 }
@@ -34,14 +32,22 @@ public class Main {
                 case EXIT:
                     System.exit(0);
                 case ECHO:
-                    CommandsEnum.handleEcho(fullCommand);
+                    Commands.handleEcho(fullCommand);
                     break;
                 case TYPE:
-                    CommandsEnum.handleType(fullCommand);
+                    Commands.handleType(fullCommand);
                     break;
                 case PWD:
-                    CommandsEnum.handlePWD();
+                    Commands.handlePWD();
+                    break;
+                case CD:
+                    Commands.handleCD(fullCommand);
+                    break;
+                case LS:
+                    Commands.handleLS();
+                    break;
             }
+
         }
     }
 }

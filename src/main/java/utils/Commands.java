@@ -13,15 +13,17 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-public enum CommandsEnum {
+public enum Commands {
     EXIT("exit"),
     ECHO("echo"),
     TYPE("type"),
-    PWD("pwd");
+    PWD("pwd"),
+    CD("cd"),
+    LS("ls");
 
     private final String value;
 
-    CommandsEnum(String value) {
+    Commands(String value) {
         this.value = value;
     }
 
@@ -29,8 +31,8 @@ public enum CommandsEnum {
         return value;
     }
 
-    public static CommandsEnum fromString(String input) {
-        for (CommandsEnum cmd : values()) {
+    public static Commands fromString(String input) {
+        for (Commands cmd : values()) {
             if (cmd.getValue().equals(input)) {
                 return cmd;
             }
@@ -85,9 +87,45 @@ public enum CommandsEnum {
         System.out.println(System.getProperty("user.dir"));
     }
 
-    public static Set<String> getFiles(String dir) throws IOException {
-        Set<String> files = new HashSet<>();
-        try (Stream<Path> stream = Files.list(Path.of(dir))) {
+    public static void handleCD(String[] command) {
+        if(command.length > 1){
+            String arg = command[1];
+            if(Files.exists(Paths.get(arg))){
+                System.setProperty("user.dir", arg);
+            }else {
+                System.out.println("cd: " + arg + ": No such file or directory");
+            }
+        }
+    }
+
+    public static void handleLS() {
+        String currentDir = System.getProperty("user.dir");
+        try {
+            Set<String> files = getDirectoryContents(currentDir);
+            for(String file : files){
+                System.out.println(file);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Set<String> getDirectoryContents(String dir) throws IOException {
+        Set<String> files;
+        try(Stream<Path> stream = Files.list(Path.of(dir))) {
+            files = stream
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .collect(Collectors.toSet());
+        }catch(IOException e){
+            throw new IOException(e);
+        }
+        return files;
+    }
+
+    public static Set<String> getDirectoryFiles(String dir) throws IOException {
+        Set<String> files;
+        try(Stream<Path> stream = Files.list(Path.of(dir))) {
             files = stream
                     .filter(file -> !Files.isDirectory(file))
                     .map(Path::getFileName)
@@ -106,7 +144,7 @@ public enum CommandsEnum {
             Set<String> files;
 
             if(tempFile.exists()){
-                files = getFiles(path);
+                files = getDirectoryFiles(path);
             }else {
                 continue;
             }
