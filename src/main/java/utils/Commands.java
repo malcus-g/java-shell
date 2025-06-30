@@ -90,8 +90,9 @@ public enum Commands {
     }
 
     public static void handleCD(String[] command) {
+        String separatorRegex = Constants.isWindows ? "\\\\" : File.separator;
         String separator = File.separator;
-        List<String> currentDir = new ArrayList<>(Arrays.asList(System.getProperty("user.dir").split(separator)));
+        List<String> currentDir = new ArrayList<>(Arrays.asList(System.getProperty("user.dir").split(separatorRegex)));
 
         if(command.length > 1){
             String path = command[1];
@@ -107,7 +108,7 @@ public enum Commands {
             }
 
             // Relative paths
-            String[] argArray = path.split(separator);
+            String[] argArray = path.split(separatorRegex);
 
             for(String file : argArray){
                 switch (file) {
@@ -124,7 +125,9 @@ public enum Commands {
             StringBuilder newPath = new StringBuilder();
             for(String file : currentDir){
                 if(file.isEmpty())continue;
-                newPath.append("/");
+                if(!file.contains(":")){
+                    newPath.append(separator);
+                }
                 newPath.append(file);
             }
             if(Files.exists(Path.of(newPath.toString()))){
