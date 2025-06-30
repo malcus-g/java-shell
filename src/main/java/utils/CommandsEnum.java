@@ -1,8 +1,10 @@
 package utils;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
@@ -66,7 +68,10 @@ public enum CommandsEnum {
         try {
             String dir = findExecutableLocationInPath(query);
             if(!(dir == null)) {
-                System.out.println(query + " is " + dir + "/" + query);
+                String output = Constants.isWindows ?
+                        query + " is " + dir + query :
+                        query + " is " + dir + File.separator + query;
+                System.out.println(output);
             }else {
                 System.out.println(query + Constants.NOT_FOUND);
             }
@@ -75,7 +80,7 @@ public enum CommandsEnum {
         }
     }
 
-    public static Set<String> getFiles(String dir) throws Exception {
+    public static Set<String> getFiles(String dir) throws IOException {
         Set<String> files = new HashSet<>();
         try (Stream<Path> stream = Files.list(Path.of(dir))) {
             files = stream
@@ -83,31 +88,57 @@ public enum CommandsEnum {
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .collect(Collectors.toSet());
-        }catch(Exception e){
-            throw new Exception(e);
+        }catch(IOException e) {
+            throw new IOException(e);
         }
         return files;
     }
 
-    public static String findExecutableLocationInPath(String executable) {
+    public static String findExecutableLocationInPath(String executable) throws IOException {
         String output = null;
         for(String path : Constants.ENV_PATH_LIST) {
-            Set<String> files = null;
-            try {
+            File tempFile = new File(path);
+            Set<String> files;
+
+            if(tempFile.exists()){
                 files = getFiles(path);
-            } catch (Exception e) {
+            }else {
                 continue;
             }
+
             for(String file : files){
-                if(file.equals(executable)){
+                Path absoluteFilePath = Constants.isWindows ?
+                        Paths.get(path + file) :
+                        Paths.get(path + File.separator + file);
+                if(file.equals(executable) && Files.isExecutable(absoluteFilePath)){
                     output = path;
                     break;
                 }
             }
-            if(output != null){
-                break;
-            }
         }
         return output;
+    }
+
+    public static void executeCommand(String[] command, String path) {
+
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.directory(new File(path));
+        processBuilder.redirectErrorStream(true);
+
+        try {
+            Process process = processBuilder.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+
+            int exitCode = process.waitFor();
+
+
+        } catch (InterruptedException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

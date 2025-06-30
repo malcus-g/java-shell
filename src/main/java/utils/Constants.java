@@ -12,6 +12,7 @@ public class Constants {
     public static final String MISSING_OPERAND = ": missing operand";
 
     // Environment
+    public static final boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
     public static final String ENV_PATH = System.getenv("PATH");
     public static final List<String> ENV_PATH_LIST = Arrays.asList(ENV_PATH.split(File.pathSeparator));
 }
