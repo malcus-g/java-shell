@@ -10,6 +10,7 @@ public class Constants {
     public static final String NOT_FOUND = ": not found";
     public static final String BUILTIN_SUFFIX = " is a shell builtin";
     public static final String MISSING_OPERAND = ": missing operand";
+    public static final String NO_SUCH_FILE = ": No such file or directory";
 
     // Environment
     public static final boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");

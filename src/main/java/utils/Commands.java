@@ -7,7 +7,9 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -88,12 +90,47 @@ public enum Commands {
     }
 
     public static void handleCD(String[] command) {
+        String separator = File.separator;
+        List<String> currentDir = new ArrayList<>(Arrays.asList(System.getProperty("user.dir").split(separator)));
+
         if(command.length > 1){
-            String arg = command[1];
-            if(Files.exists(Paths.get(arg))){
-                System.setProperty("user.dir", arg);
+            String path = command[1];
+
+            // Absolute paths
+            if(path.startsWith(separator)){
+                if(Files.exists(Path.of(path))){
+                    System.setProperty("user.dir", path);
+                }else {
+                    System.out.println("cd: " + path + Constants.NO_SUCH_FILE);
+                }
+                return;
+            }
+
+            // Relative paths
+            String[] argArray = path.split(separator);
+
+            for(String file : argArray){
+                switch (file) {
+                    case "", "." -> {
+                    }
+                    case ".." -> {
+                        if(!currentDir.isEmpty()) {
+                            currentDir.removeLast();
+                        }
+                    }
+                    default -> currentDir.add(file);
+                }
+            }
+            StringBuilder newPath = new StringBuilder();
+            for(String file : currentDir){
+                if(file.isEmpty())continue;
+                newPath.append("/");
+                newPath.append(file);
+            }
+            if(Files.exists(Path.of(newPath.toString()))){
+                System.setProperty("user.dir", newPath.toString());
             }else {
-                System.out.println("cd: " + arg + ": No such file or directory");
+                System.out.println("cd: " + path + Constants.NO_SUCH_FILE);
             }
         }
     }
