@@ -21,7 +21,7 @@ public class Main {
             if(command == null) {
                 String path = Commands.findExecutableLocationInPath(commandName);
                 if(!(path == null)) {
-                    Commands.executeCommand(fullCommand, Paths.get("/").toAbsolutePath().toString());
+                    Commands.executeCommand(fullCommand, Paths.get(System.getProperty("user.home")).toAbsolutePath().toString());
                 } else {
                     System.out.println(commandName + Constants.COMMAND_NOT_FOUND);
                 }

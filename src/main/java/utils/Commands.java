@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,37 +49,37 @@ public enum Commands {
     }
 
     public static void handleEcho(String[] line) {
-        if(line.length > 1) {
+        if (line.length > 1) {
             StringBuilder text = new StringBuilder();
             for (int i = 1; i < line.length; i++) {
                 text.append(line[i]).append(" ");
             }
             System.out.println(text.toString().trim());
-        }else {
+        } else {
             System.out.println();
         }
     }
 
     public static void handleType(String[] line) {
-        if(line.length < 2) {
+        if (line.length < 2) {
             System.out.println(line[0] + Constants.MISSING_OPERAND);
             return;
         }
 
         String query = line[1];
-        if(isValidCommand(query)) {
+        if (isValidCommand(query)) {
             System.out.println(query + Constants.BUILTIN_SUFFIX);
             return;
         }
 
         try {
             String dir = findExecutableLocationInPath(query);
-            if(!(dir == null)) {
+            if (!(dir == null)) {
                 String output = Constants.isWindows ?
                         query + " is " + dir + query :
                         query + " is " + dir + File.separator + query;
                 System.out.println(output);
-            }else {
+            } else {
                 System.out.println(query + Constants.NOT_FOUND);
             }
         } catch (Exception e) {
@@ -90,49 +92,56 @@ public enum Commands {
     }
 
     public static void handleCD(String[] command) {
-        String separatorRegex = Constants.isWindows ? "\\\\" : File.separator;
         String separator = File.separator;
+        String separatorRegex = separator.equals("\\") ? "\\\\" : separator;
         List<String> currentDir = new ArrayList<>(Arrays.asList(System.getProperty("user.dir").split(separatorRegex)));
 
-        if(command.length > 1){
+        if (command.length > 1) {
             String path = command[1];
 
+           path = path.replaceAll("[/\\\\]+", Matcher.quoteReplacement(separator));
+
+            // Home directory
+            if (path.startsWith("~")) {
+                String homeDir = System.getProperty("user.home");
+                path = path.replaceFirst("^~", Matcher.quoteReplacement(homeDir));
+                System.setProperty("user.dir", path);
+                return;
+            }
+
             // Absolute paths
-            if(path.startsWith(separator)){
-                if(Files.exists(Path.of(path))){
-                    System.setProperty("user.dir", path);
-                }else {
+            if (path.startsWith(separator) || path.matches("(?i)^[a-z]:.*")) {
+                Path absPath = Path.of(path);
+                if (Files.exists(absPath)) {
+                    System.setProperty("user.dir", absPath.toAbsolutePath().toString());
+                } else {
                     System.out.println("cd: " + path + Constants.NO_SUCH_FILE);
                 }
                 return;
             }
 
             // Relative paths
-            String[] argArray = path.split(separatorRegex);
+            String[] argArray = path.split(Pattern.quote(separator));
 
-            for(String file : argArray){
+            for (String file : argArray) {
                 switch (file) {
                     case "", "." -> {
                     }
                     case ".." -> {
-                        if(!currentDir.isEmpty()) {
+                        if (!currentDir.isEmpty()) {
                             currentDir.removeLast();
                         }
                     }
                     default -> currentDir.add(file);
                 }
             }
-            StringBuilder newPath = new StringBuilder();
-            for(String file : currentDir){
-                if(file.isEmpty())continue;
-                if(!file.contains(":")){
-                    newPath.append(separator);
-                }
-                newPath.append(file);
-            }
-            if(Files.exists(Path.of(newPath.toString()))){
-                System.setProperty("user.dir", newPath.toString());
-            }else {
+
+            String newPath = String.join(separator, currentDir);
+            Path newAbsPath = Path.of(newPath).toAbsolutePath();
+
+            if (Files.exists(newAbsPath)) {
+                System.setProperty("user.dir", newAbsPath.toString());
+            } else {
                 System.out.println("cd: " + path + Constants.NO_SUCH_FILE);
             }
         }
@@ -142,7 +151,7 @@ public enum Commands {
         String currentDir = System.getProperty("user.dir");
         try {
             Set<String> files = getDirectoryContents(currentDir);
-            for(String file : files){
+            for (String file : files) {
                 System.out.println(file);
             }
         } catch (IOException e) {
@@ -152,12 +161,12 @@ public enum Commands {
 
     public static Set<String> getDirectoryContents(String dir) throws IOException {
         Set<String> files;
-        try(Stream<Path> stream = Files.list(Path.of(dir))) {
+        try (Stream<Path> stream = Files.list(Path.of(dir))) {
             files = stream
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .collect(Collectors.toSet());
-        }catch(IOException e){
+        } catch (IOException e) {
             throw new IOException(e);
         }
         return files;
@@ -165,13 +174,13 @@ public enum Commands {
 
     public static Set<String> getDirectoryFiles(String dir) throws IOException {
         Set<String> files;
-        try(Stream<Path> stream = Files.list(Path.of(dir))) {
+        try (Stream<Path> stream = Files.list(Path.of(dir))) {
             files = stream
                     .filter(file -> !Files.isDirectory(file))
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .collect(Collectors.toSet());
-        }catch(IOException e) {
+        } catch (IOException e) {
             throw new IOException(e);
         }
         return files;
@@ -179,21 +188,21 @@ public enum Commands {
 
     public static String findExecutableLocationInPath(String executable) throws IOException {
         String output = null;
-        for(String path : Constants.ENV_PATH_LIST) {
+        for (String path : Constants.ENV_PATH_LIST) {
             File tempFile = new File(path);
             Set<String> files;
 
-            if(tempFile.exists()){
+            if (tempFile.exists()) {
                 files = getDirectoryFiles(path);
-            }else {
+            } else {
                 continue;
             }
 
-            for(String file : files){
+            for (String file : files) {
                 Path absoluteFilePath = Constants.isWindows ?
                         Paths.get(path + file) :
                         Paths.get(path + File.separator + file);
-                if(file.equals(executable) && Files.isExecutable(absoluteFilePath)){
+                if (file.equals(executable) && Files.isExecutable(absoluteFilePath)) {
                     output = path;
                     break;
                 }
@@ -213,7 +222,7 @@ public enum Commands {
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 System.out.println(line);
             }
 
