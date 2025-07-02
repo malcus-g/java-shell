@@ -1,9 +1,6 @@
 import java.nio.file.Paths;
 import java.util.Scanner;
 
-import utils.Commands;
-import utils.Constants;
-
 public class Main {
     public static void main(String[] args) throws Exception {
 
@@ -19,9 +16,9 @@ public class Main {
             Commands command = Commands.fromString(commandName);
 
             if(command == null) {
-                String path = Commands.findExecutableLocationInPath(commandName);
+                String path = Utils.findExecutableLocationInPath(commandName);
                 if(!(path == null)) {
-                    Commands.executeCommand(fullCommand, Paths.get(System.getProperty("user.home")).toAbsolutePath().toString());
+                    Utils.executeCommand(fullCommand, Paths.get(System.getProperty("user.home")).toAbsolutePath().toString());
                 } else {
                     System.out.println(commandName + Constants.COMMAND_NOT_FOUND);
                 }
