@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 public class Utils {
 
-    public static Set<String> getDirectoryContents(String dir) throws IOException {
+    public static Set<String> getDirectoryContents(String dir) throws RuntimeException {
         Set<String> files;
         try (Stream<Path> stream = Files.list(Path.of(dir))) {
             files = stream
@@ -19,7 +19,7 @@ public class Utils {
                     .map(Path::toString)
                     .collect(Collectors.toSet());
         } catch (IOException e) {
-            throw new IOException(e);
+            throw new RuntimeException("Failed to list contents of directory: " + dir, e);
         }
         return files;
     }
@@ -33,19 +33,23 @@ public class Utils {
                     .map(Path::toString)
                     .collect(Collectors.toSet());
         } catch (IOException e) {
-            throw new IOException(e);
+            throw new IOException("Could not retrieve files from directory: " + dir, e);
         }
         return files;
     }
 
-    public static String findExecutableLocationInPath(String executable) throws IOException {
+    public static String findExecutableLocationInPath(String executable) throws RuntimeException {
         String output = null;
         for (String path : Constants.ENV_PATH_LIST) {
             File tempFile = new File(path);
             Set<String> files;
 
             if (tempFile.exists()) {
-                files = getDirectoryFiles(path);
+                try {
+                    files = getDirectoryFiles(path);
+                } catch (IOException e) {
+                    throw new RuntimeException(e.getMessage());
+                }
             } else {
                 continue;
             }
@@ -81,8 +85,11 @@ public class Utils {
             int exitCode = process.waitFor();
 
 
-        } catch (InterruptedException | IOException e) {
-            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Command execution was interrupted", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to execute command: " + String.join(" ", command), e);
         }
     }
 }
