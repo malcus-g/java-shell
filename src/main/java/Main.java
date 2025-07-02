@@ -2,7 +2,7 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
 
@@ -16,13 +16,21 @@ public class Main {
             Commands command = Commands.fromString(commandName);
 
             if(command == null) {
-                String path = Utils.findExecutableLocationInPath(commandName);
-                if(!(path == null)) {
-                    Utils.executeCommand(fullCommand, Paths.get(System.getProperty("user.home")).toAbsolutePath().toString());
-                } else {
-                    System.out.println(commandName + Constants.COMMAND_NOT_FOUND);
+                String path;
+
+                try{
+                    path = Utils.findExecutableLocationInPath(commandName);
+
+                    if(!(path == null)) {
+                        Utils.executeCommand(fullCommand, Paths.get(System.getProperty("user.home")).toAbsolutePath().toString());
+                    } else {
+                        System.out.println(commandName + Constants.COMMAND_NOT_FOUND);
+                    }
+                } catch(RuntimeException e) {
+                    System.out.println(e.getMessage());
+                } finally {
+                    continue;
                 }
-                continue;
             }
 
             switch (command) {

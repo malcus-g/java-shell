@@ -1,5 +1,4 @@
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -76,7 +75,7 @@ public enum Commands {
             } else {
                 System.out.println(query + Constants.NOT_FOUND);
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -148,8 +147,8 @@ public enum Commands {
             for (String file : files) {
                 System.out.println(file);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
         }
     }
 }
